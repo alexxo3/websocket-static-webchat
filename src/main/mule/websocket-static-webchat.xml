@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:websocket="http://www.mulesoft.org/schema/mule/websocket"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/websocket http://www.mulesoft.org/schema/mule/websocket/current/mule-websocket.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="HTTP_Listener_configWS" doc:name="HTTP Listener config" doc:id="4d021560-e977-41d0-944b-1514d9c29465" >
+		<http:listener-connection host="0.0.0.0" port="8080" />
+	</http:listener-config>
+	<websocket:config name="WebSockets_Config" doc:name="WebSockets Config" doc:id="22e25c94-0f8b-4b4b-b3ec-f14a512b97f9" >
+		<websocket:connection >
+			<websocket:server-settings listenerBasePath="/ws" listenerConfig="HTTP_Listener_configWS" />
+		</websocket:connection>
+	</websocket:config>
+	<flow name="websocket-static-webchatFlow" doc:id="2aa32a5f-aa9a-411a-8434-192367d7b2c9" >
+		<websocket:inbound-listener doc:name="On New Inbound Message" doc:id="2bbce2b1-36ed-4460-8c38-06e08ed73cff" config-ref="WebSockets_Config" path="/messages"/>
+		<ee:transform doc:name="Transform Message" doc:id="0fe50ccd-4518-4486-a5cc-014dbd5d91e6" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+{
+	message: "<b>$(payload.name)</b>: $(payload.message) <br />"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<websocket:broadcast doc:name="Broadcast" doc:id="1fc609c1-e1d8-4bc3-84bc-88edb00f70ea" config-ref="WebSockets_Config" path="/ws/messages"/>
+	</flow>
+	<flow name="websocket-static-webchatFlow1" doc:id="31e421ca-96af-49e8-ae50-b5d53c0c0cd7" >
+		<http:listener doc:name="Listener" doc:id="f6388258-c5d3-4bca-904b-70d5b85e1c99" config-ref="HTTP_Listener_configWS" path="/chat"/>
+		<parse-template doc:name="Parse Template" doc:id="c252c8c3-066c-45d8-ad3b-cb63b43595c0" location="C:\MuleSoft\projects\work\index.html"/>
+	</flow>
+</mule>
